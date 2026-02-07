@@ -151,7 +151,6 @@ body{
 .feed-head-label{font-size:.7rem;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
 .feed-head-count{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--t4)}
 
-/* Egg + Materials mini bar */
 .status-bar{
   padding:10px 14px;border-bottom:1px solid var(--border);
   display:flex;flex-direction:column;gap:8px;
@@ -162,13 +161,9 @@ body{
 .egg-track{height:2px;background:var(--border);border-radius:2px;overflow:hidden}
 .egg-track-fill{height:100%;background:var(--t1);border-radius:2px;transition:width .5s linear;width:0%}
 .mats-row{display:flex;gap:8px}
-.mat-chip{
-  flex:1;display:flex;align-items:center;gap:4px;
-  font-size:.7rem;color:var(--t3);
-}
+.mat-chip{flex:1;display:flex;align-items:center;gap:4px;font-size:.7rem;color:var(--t3)}
 .mat-chip .n{font-family:'JetBrains Mono',monospace;color:var(--t2)}
 
-/* Spirits mini strip */
 .spirits-strip{
   padding:10px 14px;border-bottom:1px solid var(--border);
   display:flex;gap:8px;
@@ -227,13 +222,9 @@ body{
 }
 .modal-btn:hover{opacity:.85}
 .modal-btn:disabled{opacity:.3;cursor:not-allowed}
-.modal-btn.secondary{
-  background:transparent;border:1px solid var(--border);
-  color:var(--t2);
-}
+.modal-btn.secondary{background:transparent;border:1px solid var(--border);color:var(--t2)}
 .modal-btn.secondary:hover{border-color:var(--t3)}
 
-/* Toast */
 .toast{
   position:fixed;top:52px;left:12px;z-index:50;
   background:var(--elevated);border:1px solid var(--border);
@@ -246,7 +237,6 @@ body{
 .toast-text{font-size:.75rem;font-weight:500}
 .toast-sub{font-size:.6rem;color:var(--t3)}
 
-/* ═══ MOBILE ═══ */
 @media(max-width:768px){
   .content{flex-direction:column}
   .video-area{flex:none;height:56vw;min-height:200px}
@@ -272,9 +262,9 @@ body{
       <h1>E Village</h1>
       <p>lo-fi &middot; spirits &middot; collect</p>
     </div>
-    <div class="login-field">
-      <label id="fieldUsername" style="display:none">Username</label>
-      <input type="text" id="inUser" placeholder="pick a username" style="display:none">
+    <div class="login-field" id="usernameField" style="display:none">
+      <label>Username</label>
+      <input type="text" id="inUser" placeholder="pick a username">
     </div>
     <div class="login-field">
       <label>Email</label>
@@ -282,7 +272,7 @@ body{
     </div>
     <div class="login-field">
       <label>Password</label>
-      <input type="password" id="inPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;">
+      <input type="password" id="inPass" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" minlength="6">
     </div>
     <button class="l-btn" id="authBtn" onclick="doAuth()">Sign In</button>
     <div class="l-error" id="authError"></div>
@@ -363,54 +353,43 @@ body{
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-// CONFIG — Replace with your Supabase project
-// ══════════════════════════════════════════════
-const SUPABASE_URL = 'https://eyqddqtlgthgkiqjavyx.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_CsTLSJj1YwgiHMxUTa685Q_2TVvZa2Q';
+// ══════════════════════════════════════════════════════
+// ⚠️  REPLACE THESE TWO VALUES WITH YOUR SUPABASE INFO
+// ══════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://eyqddqtlgthgkiqjavyx.supabase.co';          // e.g. 'https://abcdefgh.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_CsTLSJj1YwgiHMxUTa685Q_2TVvZa2Q'; // e.g. 'eyJhbGciOi...'
+// ══════════════════════════════════════════════════════
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ══════════════════════════════════════════════
-// YOUTUBE STREAMS
-// ══════════════════════════════════════════════
+// ── YouTube streams ──
 const PL = {
   cafe:     { yt:'jfKfPfyJRdk', title:'lofi hip hop radio — beats to relax/study to', sub:'Café vibes' },
-  outdoors: { yt:'M0F2tWjzYBk', title:'lofi hip hop radio — nature & chill',          sub:'Outdoors'   },
+  outdoors: { yt:'M0F2tWjzYBk', title:'lofi hip hop radio — nature & chill',          sub:'Outdoors' },
   focus:    { yt:'jfKfPfyJRdk', title:'lofi hip hop radio — beats to focus to',       sub:'Extreme Focus' }
 };
 
-// ══════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════
+// ── State ──
 let S = {
-  user: null,
-  profile: null,
-  spirits: [],
+  user: null, profile: null, spirits: [],
   emblems: { cafe_bean:0, wild_essence:0, focus_shard:0 },
-  playing: false,
-  pl: 'cafe',
-  eggT: 0,
-  EGG_SEC: 30,
-  sessionId: null,
-  feedN: 0,
-  ticker: null,
-  authMode: 'login' // 'login' or 'signup'
+  playing: false, pl: 'cafe',
+  eggT: 0, EGG_SEC: 30,
+  sessionId: null, feedN: 0, ticker: null,
+  authMode: 'login'
 };
-
 const SPIRIT_ICONS = { fox_lavender:'🦊', panda:'🐼', fox_fire:'🔥' };
 const EVO_LABELS = ['I','II','III'];
 
 // ══════════════════════════════════════════════
-// AUTH
+// AUTH — Email/Password only (no redirects needed)
 // ══════════════════════════════════════════════
 function toggleAuthMode(){
   S.authMode = S.authMode === 'login' ? 'signup' : 'login';
-  const isSignup = S.authMode === 'signup';
-  document.getElementById('authBtn').textContent = isSignup ? 'Create Account' : 'Sign In';
-  document.getElementById('authToggle').textContent = isSignup ? 'Already have an account? Sign in' : 'Need an account? Sign up';
-  document.getElementById('inUser').style.display = isSignup ? '' : 'none';
-  document.getElementById('fieldUsername').style.display = isSignup ? '' : 'none';
+  const up = S.authMode === 'signup';
+  document.getElementById('authBtn').textContent = up ? 'Create Account' : 'Sign In';
+  document.getElementById('authToggle').textContent = up ? 'Already have an account? Sign in' : 'Need an account? Sign up';
+  document.getElementById('usernameField').style.display = up ? '' : 'none';
   document.getElementById('authError').textContent = '';
 }
 
@@ -421,61 +400,55 @@ async function doAuth(){
   const errEl = document.getElementById('authError');
   errEl.textContent = '';
 
-  if(!email || !pass){
-    errEl.textContent = 'Email and password required';
-    return;
-  }
-  if(pass.length < 6){
-    errEl.textContent = 'Password must be at least 6 characters';
-    return;
-  }
+  if(!email || !pass){ errEl.textContent = 'Email and password required'; return; }
+  if(pass.length < 6){ errEl.textContent = 'Password must be at least 6 characters'; return; }
 
   btn.disabled = true;
-
   try {
     let result;
     if(S.authMode === 'signup'){
-      const username = document.getElementById('inUser').value.trim() || 'user_' + Math.random().toString(36).slice(2,8);
+      const username = document.getElementById('inUser').value.trim()
+        || 'user_' + Math.random().toString(36).slice(2,8);
       result = await sb.auth.signUp({
         email, password: pass,
         options: { data: { username } }
       });
+      // Check if email confirmation is required
+      if(result.data?.user && !result.data.session){
+        errEl.style.color = '#8f8';
+        errEl.textContent = 'Check your email to confirm your account!';
+        btn.disabled = false;
+        return;
+      }
     } else {
       result = await sb.auth.signInWithPassword({ email, password: pass });
     }
-
     if(result.error) throw result.error;
-
     S.user = result.data.user;
     await loadUserData();
     enterApp();
   } catch(e){
     errEl.textContent = e.message || 'Auth failed';
-  } finally {
-    btn.disabled = false;
-  }
+  } finally { btn.disabled = false; }
 }
 
 async function doLogout(){
   if(S.sessionId){
-    await sb.rpc('end_session', { p_session_id: S.sessionId });
+    try { await sb.rpc('end_session', { p_session_id: S.sessionId }); } catch(e){}
     S.sessionId = null;
   }
   await sb.auth.signOut();
-  S.user = null;
-  S.playing = false;
+  S.user = null; S.playing = false;
   if(S.ticker){ clearInterval(S.ticker); S.ticker = null; }
   document.getElementById('shell').classList.remove('on');
   document.getElementById('login').classList.remove('gone');
-  // Reset video
   const embed = document.getElementById('videoEmbed');
   const iframe = embed.querySelector('iframe');
   if(iframe) iframe.remove();
   embed.classList.remove('loaded');
-  document.getElementById('videoPlaceholder').style.display = '';
 }
 
-// Check existing session on load
+// Auto-login if session exists (e.g. page refresh)
 async function checkSession(){
   const { data: { session } } = await sb.auth.getSession();
   if(session){
@@ -490,20 +463,12 @@ async function checkSession(){
 // ══════════════════════════════════════════════
 async function loadUserData(){
   if(!S.user) return;
-
-  // Profile
   const { data: profile } = await sb.from('profiles').select('*').eq('id', S.user.id).single();
   S.profile = profile;
-
-  // Spirits
   const { data: spirits } = await sb.from('spirits').select('*').eq('user_id', S.user.id);
   S.spirits = spirits || [];
-
-  // Emblems
   const { data: emblems } = await sb.from('emblems').select('*').eq('user_id', S.user.id);
-  if(emblems){
-    emblems.forEach(e => { S.emblems[e.emblem_type] = e.quantity; });
-  }
+  if(emblems) emblems.forEach(e => { S.emblems[e.emblem_type] = e.quantity; });
 }
 
 function enterApp(){
@@ -516,27 +481,22 @@ function enterApp(){
 }
 
 // ══════════════════════════════════════════════
-// UI UPDATES
+// UI
 // ══════════════════════════════════════════════
 function updateUI(){
-  // Egg count
   document.getElementById('eggCount').textContent = '🥚 ' + (S.profile?.total_eggs || 0);
-  // Listen time
   const mins = Math.floor((S.profile?.total_listen_seconds || 0) / 60);
   document.getElementById('listenTime').textContent = '🎧 ' + mins + 'm';
-  // Materials
   document.getElementById('matC').textContent = S.emblems.cafe_bean;
   document.getElementById('matO').textContent = S.emblems.wild_essence;
   document.getElementById('matF').textContent = S.emblems.focus_shard;
-  // Spirits
   renderSpirits();
 }
 
 function renderSpirits(){
   const strip = document.getElementById('spiritsStrip');
   strip.innerHTML = '';
-  const order = ['fox_lavender','panda','fox_fire'];
-  order.forEach(type => {
+  ['fox_lavender','panda','fox_fire'].forEach(type => {
     const sp = S.spirits.find(s => s.spirit_type === type);
     if(!sp) return;
     const el = document.createElement('div');
@@ -569,23 +529,18 @@ async function startStream(){
   embed.classList.add('loaded');
   document.getElementById('psPlay').textContent = '⏸';
   feed('🎵','Now streaming <b>' + pl.title + '</b>');
-
-  // Start listen session in DB
   try {
     const { data } = await sb.rpc('start_session', { p_playlist: S.pl });
     S.sessionId = data;
-  } catch(e){ console.warn('Session start failed:', e); }
-
+  } catch(e){ console.warn('Session start:', e); }
   startTicker();
 }
 
 async function swapStream(){
-  // End current session
   if(S.sessionId){
     try { await sb.rpc('end_session', { p_session_id: S.sessionId }); } catch(e){}
     S.sessionId = null;
   }
-
   const embed = document.getElementById('videoEmbed');
   const old = embed.querySelector('iframe');
   if(old) old.remove();
@@ -598,7 +553,6 @@ async function swapStream(){
     embed.insertBefore(iframe, embed.firstChild);
     embed.classList.add('loaded');
     feed('🎵','Switched to <b>' + pl.title + '</b>');
-    // New session
     try {
       const { data } = await sb.rpc('start_session', { p_playlist: S.pl });
       S.sessionId = data;
@@ -612,7 +566,7 @@ function setPl(el){
   document.querySelectorAll('.ps-pill').forEach(p => p.classList.remove('on'));
   el.classList.add('on');
   S.pl = el.dataset.pl;
-  S.eggT = 0; // reset egg timer on playlist switch
+  S.eggT = 0;
   swapStream();
 }
 
@@ -623,14 +577,12 @@ function startTicker(){
   if(S.ticker) return;
   S.ticker = setInterval(async () => {
     if(!S.playing) return;
-
     S.eggT += 0.5;
     const pct = Math.min((S.eggT / S.EGG_SEC) * 100, 100);
     document.getElementById('eggFill').style.width = pct + '%';
     const rem = Math.max(0, Math.ceil(S.EGG_SEC - S.eggT));
     document.getElementById('eggTimer').textContent = rem + 's';
 
-    // Egg drop — server-validated
     if(S.eggT >= S.EGG_SEC){
       S.eggT = 0;
       try {
@@ -640,14 +592,12 @@ function startTicker(){
           feed('⏳','Rate limited — wait ' + data.wait_seconds + 's');
           return;
         }
-        // Success
         S.profile.total_eggs = data.total_eggs;
         S.emblems[data.emblem_granted]++;
         document.getElementById('eggCount').textContent = '🥚 ' + data.total_eggs;
         updateUI();
         showToast(data.rarity);
         feed('🥚','<b>' + data.rarity + '</b> egg hatched! #' + data.total_eggs);
-
         const emblNames = { cafe_bean:'☕ Café Bean', wild_essence:'🌿 Wild Essence', focus_shard:'⚡ Focus Shard' };
         feed('✨','Found <b>' + emblNames[data.emblem_granted] + '</b>');
       } catch(e){
@@ -659,51 +609,40 @@ function startTicker(){
 }
 
 // ══════════════════════════════════════════════
-// CRAFTING / EVOLUTION
+// CRAFTING
 // ══════════════════════════════════════════════
 function openModal(spirit){
   const cost = spirit.evo_stage === 0 ? 3 : 5;
   const canEvo = spirit.evo_stage < 2 &&
-    S.emblems.cafe_bean >= cost &&
-    S.emblems.wild_essence >= cost &&
-    S.emblems.focus_shard >= cost;
-
+    S.emblems.cafe_bean >= cost && S.emblems.wild_essence >= cost && S.emblems.focus_shard >= cost;
   const box = document.getElementById('modalBox');
   box.innerHTML =
     '<div class="modal-icon">' + SPIRIT_ICONS[spirit.spirit_type] + '</div>' +
     '<div class="modal-title">' + spirit.name + '</div>' +
-    '<div class="modal-stage">Stage ' + EVO_LABELS[spirit.evo_stage] + ' · ' + spirit.spirit_type.replace('_',' ') + '</div>' +
+    '<div class="modal-stage">Stage ' + EVO_LABELS[spirit.evo_stage] + ' · ' + spirit.spirit_type.replace(/_/g,' ') + '</div>' +
     (spirit.evo_stage < 2 ?
       '<div class="modal-cost">' +
-        'Evolve to <b>Stage ' + EVO_LABELS[spirit.evo_stage + 1] + '</b> — costs ' + cost + '× each emblem<br>' +
+        'Evolve to <b>Stage ' + EVO_LABELS[spirit.evo_stage + 1] + '</b> — costs ' + cost + '× each<br>' +
         '☕ ' + S.emblems.cafe_bean + '/' + cost + ' · ' +
         '🌿 ' + S.emblems.wild_essence + '/' + cost + ' · ' +
         '⚡ ' + S.emblems.focus_shard + '/' + cost +
       '</div>' +
       '<button class="modal-btn" ' + (canEvo ? '' : 'disabled') + ' onclick="doEvolve(\'' + spirit.id + '\')">Evolve</button>' :
-      '<div class="modal-cost">Max evolution reached ✨</div>'
+      '<div class="modal-cost">Max evolution ✨</div>'
     ) +
     '<button class="modal-btn secondary" onclick="closeModal()">Close</button>';
-
   document.getElementById('modal').classList.add('open');
 }
-
 function closeModal(){ document.getElementById('modal').classList.remove('open'); }
 
 async function doEvolve(spiritId){
   try {
     const { data, error } = await sb.rpc('evolve_spirit', { p_spirit_id: spiritId });
     if(error) throw error;
-    if(data.error){
-      feed('❌','Evolution failed: ' + data.error);
-      return;
-    }
-
-    // Refresh data
+    if(data.error){ feed('❌','Evolution failed: ' + data.error); return; }
     await loadUserData();
     updateUI();
     closeModal();
-
     const sp = S.spirits.find(s => s.id === spiritId);
     feed('🌟','<b>' + (sp?.name || 'Spirit') + '</b> evolved to Stage ' + EVO_LABELS[data.new_stage] + '!');
     showToast('evolution');
@@ -723,12 +662,10 @@ function showToast(rarity){
   document.getElementById('toastT').textContent = isEvo ? 'Evolution!' : rarity + ' Egg';
   document.getElementById('toastS').textContent = isEvo ? '' : '#' + S.profile.total_eggs;
   t.classList.add('show');
-  if(!isEvo){
-    setTimeout(() => {
-      document.getElementById('toastI').textContent = '🐣';
-      document.getElementById('toastT').textContent = 'Hatched!';
-    }, 1000);
-  }
+  if(!isEvo) setTimeout(() => {
+    document.getElementById('toastI').textContent = '🐣';
+    document.getElementById('toastT').textContent = 'Hatched!';
+  }, 1000);
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
@@ -743,25 +680,21 @@ function feed(icon, text){
   el.className = 'fi';
   el.innerHTML =
     '<div class="fi-icon">' + icon + '</div>' +
-    '<div class="fi-body">' +
-      '<div class="fi-text">' + text + '</div>' +
-      '<div class="fi-time">' + ts + '</div>' +
-    '</div>';
+    '<div class="fi-body"><div class="fi-text">' + text + '</div>' +
+    '<div class="fi-time">' + ts + '</div></div>';
   f.insertBefore(el, f.firstChild);
   while(f.children.length > 50) f.removeChild(f.lastChild);
   S.feedN++;
   document.getElementById('feedN').textContent = S.feedN;
 }
 
-// ══════════════════════════════════════════════
-// HANDLE PAGE CLOSE — end session
-// ══════════════════════════════════════════════
+// ── End session on page close ──
 window.addEventListener('beforeunload', () => {
-  if(S.sessionId){
-    // Use sendBeacon for reliable close
-    const url = SUPABASE_URL + '/rest/v1/rpc/end_session';
-    const body = JSON.stringify({ p_session_id: S.sessionId });
-    navigator.sendBeacon(url, new Blob([body], { type: 'application/json' }));
+  if(S.sessionId && S.user){
+    navigator.sendBeacon(
+      SUPABASE_URL + '/rest/v1/rpc/end_session',
+      new Blob([JSON.stringify({ p_session_id: S.sessionId })], { type:'application/json' })
+    );
   }
 });
 
